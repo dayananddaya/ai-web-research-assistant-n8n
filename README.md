@@ -28,6 +28,17 @@ This project demonstrates how to build a cost-effective AI search workflow that 
 6. Final response is returned to the user
 
 ---
+## 🧠 Workflow Architecture
+
+![n8n Workflow](workflow-overview.png)
+
+This diagram shows the complete AI web research pipeline:
+- Chat trigger receives user query
+- AI Agent decides when to search
+- Tavily API performs real-time web search
+- LLM synthesizes answer
+- Question & Answer are logged to Google Sheets
+
 
 ## 🛠️ Tech Stack
 

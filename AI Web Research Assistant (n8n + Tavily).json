@@ -1,0 +1,291 @@
+{
+  "name": "AI Web Research Assistant (n8n + Tavily)",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        240,
+        0
+      ],
+      "id": "1f8131f5-a6e6-4380-ad63-d9cdccdbdbc1",
+      "name": "When chat message received",
+      "webhookId": "0089b234-c1d2-40dd-b8e0-f1fe126c1a1d"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('When chat message received').item.json.chatInput }}",
+        "options": {
+          "systemMessage": "=You are Perplexity-style AI search assistant.\n\nRules:\n- You may call the search tool at most ONCE\n- If search results are available, answer immediately\n- Do NOT repeat searches\n- Do NOT wait for more data\n- Always return a final answer to the user\n\nAnswer style:\n1 Clear and concise\n2. Mention sources briefly if helpful\n3. No JSON\nRespond as quickly as possible. Prefer speed over completeness.\n\n\n",
+          "maxIterations": 2,
+          "returnIntermediateSteps": false,
+          "enableStreaming": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "cbff0388-8bfe-4621-aa7f-83f36a5fcd04",
+      "name": "AI Agent",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "options": {
+          "maxTokens": 400,
+          "temperature": 0.4
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        288,
+        208
+      ],
+      "id": "8a237aa8-e25a-494b-85d0-bd6f24902ec3",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "OoBCJfT8lhUlEfOR",
+          "name": "dayanandshettaroo7@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool to search the web for up-to-date information.\nProvide a short search query based on the user's question",
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"query\": \"{{ $json.chatInput }}\",\n  \"search_depth\": \"basic\",\n  \"max_results\": 5\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        576,
+        208
+      ],
+      "id": "7a043863-0418-406c-924b-7f7d5f533757",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        432,
+        208
+      ],
+      "id": "56d2f19e-224a-4cba-896b-9a3caaec4c2f",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "42017d11-3253-463e-ada7-ea1cf2218589",
+              "name": "Timestamp",
+              "value": "={{ new Date().toISOString() }}",
+              "type": "string"
+            },
+            {
+              "id": "efb36860-c7a2-4cf7-b02b-acd68ba1da90",
+              "name": "Question",
+              "value": "={{ $('When chat message received').item.json.chatInput }}",
+              "type": "string"
+            },
+            {
+              "id": "35c1fc8e-da28-46eb-9403-4a90a4bc95f8",
+              "name": "Answer",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        768,
+        0
+      ],
+      "id": "c4ff99d4-dc24-4f63-9f4c-a9b1a7cef8b6",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1q3AARcYfk5jdBx0rv_VQ1jJZ4W5VhahbU387hP-Fpcw",
+          "mode": "list",
+          "cachedResultName": "AI_Search_Logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1q3AARcYfk5jdBx0rv_VQ1jJZ4W5VhahbU387hP-Fpcw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "ai_search_logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1q3AARcYfk5jdBx0rv_VQ1jJZ4W5VhahbU387hP-Fpcw/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $json.Timestamp }}",
+            "Question": "={{ $json.Question }}",
+            "Answer": "={{ $json.Answer }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Question",
+              "displayName": "Question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Answer",
+              "displayName": "Answer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        976,
+        0
+      ],
+      "id": "4f24e46c-15ac-4a90-aff5-89a6a9188287",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BckOKMPKGICAqKF3",
+          "name": "dayanandshettaroo7@gmail.com"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "285db0f7-416d-4a13-b92a-832ea4733d1a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9bc93a074b04b9081fad5f8ebe44d7501eb0208fab7417d714720ccd56c1489d"
+  },
+  "id": "tgXS-Zt1FUiS17zaDLGkl",
+  "tags": []
+}
